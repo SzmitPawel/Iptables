@@ -10,7 +10,7 @@
 # Description:       Enable service provided by daemon.
 ### END INIT INFO
 
-####################################################################################################################################################################
+####################################################################################################
 # Script Purpose:
 # The script aims to defaultly discard incoming and transit
 # traffic, except for traffic originating from a whitelist
@@ -20,9 +20,9 @@
 # source of attacks on other servers, suggesting the need
 # to consider stricter rules for outgoing traffic if
 # security concerns arise.
-#####################################################################################################################################################################
+####################################################################################################
 
-####################################################################################################################################################################
+####################################################################################################
 # Unification of terms
 # To make it easier to understand, the terms of rules and
 # comments are unified below
@@ -30,16 +30,16 @@
 # ACCEPT : Authorization
 # DROP   : Discard
 # REJECT : Rejection
-####################################################################################################################################################################
+####################################################################################################
 
-####################################################################################################################################################################
-# Cheat sheet
+####################################################################################################
+# Cheat sheet:
 #
 # -A, --append       Add one or more new rules to designated chain
 # -D, --delete       Delete one or more rules from designated chain
 # -P, --policy       Set the specified chain policy to the specified target
 # -N, --new-chain    Create a new user-defined chain
-# -X, --delete-chain Delete specified user defined chain
+# -X, --delete-chain Delete specified user-defined chain
 # -F                 Table initialization
 #
 # -p, --protocol      protocol           Specify protocols (tcp, udp, icmp, all)
@@ -52,43 +52,42 @@
 # -m state --state    State              Specify condition of packet as condition
 #                                        For state, NEW, ESTABLISHED, RELATED, INVALID can be specified
 # !            Reverse condition (except for ~)
-####################################################################################################################################################################
+####################################################################################################
 
-# path
+# Path
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
-####################################################################################################################################################################
-# IP definition
+####################################################################################################
+# IP Definitions:
 # Define as necessary. It works even if it is not defined.
-####################################################################################################################################################################
+####################################################################################################
 
 # Range allowed as internal network
 # LOCAL_NET="xxx.xxx.xxx.xxx/xx"
 
-# Scope of permitting partial restriction as internal network
+# Scope permitting partial restriction as an internal network
 # LIMITED_LOCAL_NET="xxx.xxx.xxx.xxx/xx"
 
-# Define settings that represent all IP
+# Define settings that represent all IPs
 # ANY="0.0.0.0/0"
 
-# Trusted host (array)
+# Trusted hosts (array)
 # ALLOW_HOSTS=(
-# 	"xxx.xxx.xxx.xxx"
-# 	"xxx.xxx.xxx.xxx"
-# 	"xxx.xxx.xxx.xxx"
+#     "xxx.xxx.xxx.xxx"
+#     "xxx.xxx.xxx.xxx"
+#     "xxx.xxx.xxx.xxx"
 # )
 
-# Unconditionally destroyed list (array)
+# Unconditionally blocked list (array)
 # DENY_HOSTS=(
-# 	"xxx.xxx.xxx.xxx"
-# 	"xxx.xxx.xxx.xxx"
-# 	"xxx.xxx.xxx.xxx"
+#     "xxx.xxx.xxx.xxx"
+#     "xxx.xxx.xxx.xxx"
+#     "xxx.xxx.xxx.xxx"
 # )
 
-####################################################################################################################################################################
-# Port definition
-####################################################################################################################################################################
-
+####################################################################################################
+# Port Definitions:
+####################################################################################################
 SSH=22
 FTP=20,21
 DNS=53
@@ -102,94 +101,98 @@ MYSQL=3306
 NET_BIOS=135,137,138,139,445
 DHCP=67,68
 
-####################################################################################################################################################################
-# function
-####################################################################################################################################################################
+####################################################################################################
+# Functions:
+####################################################################################################
 
 # Initialize iptables, remove all rules
 initialize() 
 {
-	iptables -F # Table initialization
-	iptables -X # Delete chain
-	iptables -Z # Clear packet count · byte counter
-	iptables -P INPUT   ACCEPT
-	iptables -P OUTPUT  ACCEPT
-	iptables -P FORWARD ACCEPT
+    iptables -F  # Table initialization
+    iptables -X  # Delete chain
+    iptables -Z  # Clear packet count · byte counter
+    iptables -P INPUT   ACCEPT
+    iptables -P OUTPUT  ACCEPT
+    iptables -P FORWARD ACCEPT
 }
 
 # Process after rule application
-finailize()
+finalize()
 {
-	/etc/init.d/firewall.sh save && # Save setting
-	/etc/init.d/firewall.sh restart && # Try restarting with what you saved
-	return 0
-	return 1
+    /etc/init.d/firewall.sh save &&  # Save settings
+    /etc/init.d/firewall.sh restart  # Try restarting with saved settings
+    return 0
+    return 1
 }
 
 # For development
 if [ "$1" == "dev" ]
 then
-	iptables() { echo "iptables $ @"; }
-	finailize() { echo "finailize"; }
+    iptables() { echo "iptables $@"; }
+    finalize() { echo "finalize"; }
 fi
 
-####################################################################################################################################################################
-# Initialization of iptables
-####################################################################################################################################################################
+####################################################################################################
+# Initialization of iptables:
+####################################################################################################
 initialize
 
-####################################################################################################################################################################
-# Determining policies
-####################################################################################################################################################################
-iptables -P INPUT   DROP # All DROP. It is better to cover all the holes and then leave out the necessary ports.
+####################################################################################################
+# Set Policies:
+####################################################################################################
+iptables -P INPUT   DROP  # Default to DROP for incoming traffic.
 iptables -P OUTPUT  ACCEPT
 iptables -P FORWARD DROP
 
-####################################################################################################################################################################
-# Trusted host allowed
-####################################################################################################################################################################
+####################################################################################################
+# Trusted Hosts Allowed:
+####################################################################################################
 
-# local host
-# lo refers to its own host in terms of local loopback
-iptables -A INPUT -i lo -j ACCEPT # SELF -> SELF
+# Local host
+# "lo" refers to the local loopback interface
+iptables -A INPUT -i lo -j ACCEPT  # SELF -> SELF
 
 # Local network
-# $LOCAL_NET Is set, communication with another server on the LAN is permitted
+# If $LOCAL_NET is set, communication with other servers on the LAN is permitted
 if [ "$LOCAL_NET" ]
 then
-	iptables -A INPUT -p tcp -s $LOCAL_NET -j ACCEPT # LOCAL_NET -> SELF
+    iptables -A INPUT -p tcp -s $LOCAL_NET -j ACCEPT  # LOCAL_NET -> SELF
 fi
 
-# Trusted host
-# If $ ALLOW_HOSTS is set, permission to the host is permitted
+# Trusted hosts
+# If $ALLOW_HOSTS is set, permission is granted to those hosts
 if [ "${ALLOW_HOSTS}" ]
 then
-	for allow_host in "${ALLOW_HOSTS}"
-	do
-		iptables -A INPUT -p tcp -s $allow_host -j ACCEPT # allow_host -> SELF
-	done
+    for allow_host in "${ALLOW_HOSTS[@]}"
+    do
+        iptables -A INPUT -p tcp -s $allow_host -j ACCEPT  # allow_host -> SELF
+    done
 fi
 
-####################################################################################################################################################################
-# Discard access from $ DENY_HOSTS
-####################################################################################################################################################################
+####################################################################################################
+# Discard Access from $DENY_HOSTS:
+####################################################################################################
 if [ "${DENY_HOSTS}" ]
 then
-	for deny_host in "${DENY_HOSTS}"
-	do
-		iptables -A INPUT -s $deny_host -m limit --limit 1/s -j LOG --log-prefix "deny_host: "
-		iptables -A INPUT -s $deny_host -j DROP
-	done
+    for deny_host in "${DENY_HOSTS[@]}"
+    do
+        iptables -A INPUT -s $deny_host -m limit --limit 1/s -j LOG --log-prefix "deny_host: "
+        iptables -A INPUT -s $deny_host -j DROP
+    done
 fi
 
-####################################################################################################################################################################
-# Packet communication after session establishment is permitted
-####################################################################################################################################################################
+####################################################################################################
+# Allow Packet Communication after Session Establishment:
+####################################################################################################
 iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 
-####################################################################################################################################################################
+####################################################################################################
+# Other Rules and Security Measures:
+####################################################################################################
+
+####################################################################################################
 # Attack countermeasure: Stealth Scan
-####################################################################################################################################################################
+####################################################################################################
 iptables -N STEALTH_SCAN # Make a chain with the name "STEALTH_SCAN"
 iptables -A STEALTH_SCAN -j LOG --log-prefix "stealth_scan_attack: "
 iptables -A STEALTH_SCAN -j DROP
@@ -207,16 +210,16 @@ iptables -A INPUT -p tcp --tcp-flags ACK,FIN FIN     -j STEALTH_SCAN
 iptables -A INPUT -p tcp --tcp-flags ACK,PSH PSH     -j STEALTH_SCAN
 iptables -A INPUT -p tcp --tcp-flags ACK,URG URG     -j STEALTH_SCAN
 
-####################################################################################################################################################################
+####################################################################################################
 # Attack countermeasure: Port scan by fragment packet, DOS attack
 # namap -v -sF Measures such as
-####################################################################################################################################################################
+####################################################################################################
 iptables -A INPUT -f -j LOG --log-prefix 'fragment_packet:'
 iptables -A INPUT -f -j DROP
  
-####################################################################################################################################################################
+####################################################################################################
 # Attack countermeasure: Ping of Death
-####################################################################################################################################################################
+####################################################################################################
 # Discard if more than 1 ping per second lasts ten times
 iptables -N PING_OF_DEATH # Make chain with the name "PING_OF_DEATH"
 iptables -A PING_OF_DEATH -p icmp --icmp-type echo-request \
@@ -235,10 +238,10 @@ iptables -A PING_OF_DEATH -j DROP
 # ICMP jumps to "PING_OF_DEATH" chain
 iptables -A INPUT -p icmp --icmp-type echo-request -j PING_OF_DEATH
 
-####################################################################################################################################################################
+####################################################################################################
 # Attack measures: SYN Flood Attack
 # In addition to this countermeasure, you should turn on Syn Cookie.
-####################################################################################################################################################################
+####################################################################################################
 iptables -N SYN_FLOOD # Make a chain with the name "SYN_FLOOD"
 iptables -A SYN_FLOOD -p tcp --syn \
          -m hashlimit \
@@ -265,9 +268,9 @@ iptables -A SYN_FLOOD -j DROP
 # SYN packet jumps to "SYN_FLOOD" chain
 iptables -A INPUT -p tcp --syn -j SYN_FLOOD
 
-####################################################################################################################################################################
+####################################################################################################
 # Attack measures: HTTP DoS/DDoS Attack
-####################################################################################################################################################################
+####################################################################################################
 iptables -N HTTP_DOS # Make chain with the name "HTTP_DOS"
 iptables -A HTTP_DOS -p tcp -m multiport --dports $HTTP \
          -m hashlimit \
@@ -294,40 +297,40 @@ iptables -A HTTP_DOS -j DROP
 # Packets to HTTP jump to "HTTP_DOS" chain
 iptables -A INPUT -p tcp -m multiport --dports $HTTP -j HTTP_DOS
 
-####################################################################################################################################################################
+####################################################################################################
 # Attack measures: IDENT port probe
 # Use ident to allow an attacker to prepare for future attacks,
 # Perform a port survey to see if the system is vulnerable
 # There is likely to be.
 # DROP REJECT as the response of the mail server etc. falls
-####################################################################################################################################################################
+####################################################################################################
 iptables -A INPUT -p tcp -m multiport --dports $IDENT -j REJECT --reject-with tcp-reset
 
-####################################################################################################################################################################
+####################################################################################################
 # Attack measures: SSH Brute Force
 # In the case of a server using password authentication, SSH prepares for a password full attack.
 # Try to make a connection try only five times per minute.。
 # In order to prevent the SSH client side from repeating reconnection, make REJECT instead of DROP.
 # If the SSH server is password-on authentication, uncomment out the following
-####################################################################################################################################################################
+####################################################################################################
 # iptables -A INPUT -p tcp --syn -m multiport --dports $SSH -m recent --name ssh_attack --set
 # iptables -A INPUT -p tcp --syn -m multiport --dports $SSH -m recent --name ssh_attack --rcheck --seconds 60 --hitcount 5 -j LOG --log-prefix "ssh_brute_force: "
 # iptables -A INPUT -p tcp --syn -m multiport --dports $SSH -m recent --name ssh_attack --rcheck --seconds 60 --hitcount 5 -j REJECT --reject-with tcp-reset
 
-####################################################################################################################################################################
+####################################################################################################
 # Attack measures: FTP Brute Force
 # FTP prepares for password full attacks for password authentication.
 # Try to make a connection try only five times per minute.
 # In order to prevent the FTP client side from repeating reconnection, make REJECT instead of DROP
 # When starting FTP server, un-comment out the following
-####################################################################################################################################################################
+####################################################################################################
 # iptables -A INPUT -p tcp --syn -m multiport --dports $FTP -m recent --name ftp_attack --set
 # iptables -A INPUT -p tcp --syn -m multiport --dports $FTP -m recent --name ftp_attack --rcheck --seconds 60 --hitcount 5 -j LOG --log-prefix "ftp_brute_force: "
 # iptables -A INPUT -p tcp --syn -m multiport --dports $FTP -m recent --name ftp_attack --rcheck --seconds 60 --hitcount 5 -j REJECT --reject-with tcp-reset
 
-####################################################################################################################################################################
+####################################################################################################
 # Discard packets addressed to all hosts (broadcast address, multicast address)
-####################################################################################################################################################################
+####################################################################################################
 iptables -A INPUT -d 192.168.1.255   -j LOG --log-prefix "drop_broadcast: "
 iptables -A INPUT -d 192.168.1.255   -j DROP
 iptables -A INPUT -d 255.255.255.255 -j LOG --log-prefix "drop_broadcast: "
@@ -335,9 +338,9 @@ iptables -A INPUT -d 255.255.255.255 -j DROP
 iptables -A INPUT -d 224.0.0.1       -j LOG --log-prefix "drop_broadcast: "
 iptables -A INPUT -d 224.0.0.1       -j DROP
 
-####################################################################################################################################################################
+####################################################################################################
 # Allow input from all hosts (ANY -> SELF)
-####################################################################################################################################################################
+####################################################################################################
 
 # ICMP: Setting to respond to pings
 #iptables -A INPUT -p icmp -j ACCEPT
@@ -373,9 +376,9 @@ iptables -A INPUT -p tcp -m multiport --dports $SSH -j ACCEPT
 #iptables -A INPUT -p udp -m multiport --sports $DHCP -j ACCEPT
 
 
-####################################################################################################################################################################
+####################################################################################################
 # Allow input from local network (limited)
-####################################################################################################################################################################
+####################################################################################################
 
 if [ "$LIMITED_LOCAL_NET" ]
 then
@@ -389,9 +392,9 @@ then
 	iptables -A INPUT -p tcp -s $LIMITED_LOCAL_NET -m multiport --dports $MYSQL -j ACCEPT # LIMITED_LOCAL_NET -> SELF
 fi
 
-####################################################################################################################################################################
+####################################################################################################
 # Other than that
 # Those which also did not apply to the above rule logging and discarding
-####################################################################################################################################################################
+####################################################################################################
 iptables -A INPUT  -j LOG --log-prefix "drop: "
 iptables -A INPUT  -j DROP
