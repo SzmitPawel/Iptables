@@ -10,6 +10,11 @@
 # Description:       Enable service provided by daemon.
 ### END INIT INFO
 
+# Name: Linux Firewall Iptables For Ubuntu
+# Author: Szmit Paweł
+# Date Created: September 23, 2023
+# Last Updated: September 23, 2023
+
 ####################################################################################################
 # Script Purpose:
 # The script aims to defaultly discard incoming and transit
@@ -98,8 +103,9 @@ HTTP=80,443
 IDENT=113
 NTP=123
 MYSQL=3306
-NET_BIOS_UDP=137,138,139,445,5353
+NET_BIOS_UDP=137,138,139,445
 NET_BIOS_TCP=139,445
+ZEROCONF=5353
 DHCP=67,68
 
 ####################################################################################################
@@ -369,8 +375,11 @@ iptables -A INPUT -p tcp -m multiport --dports $SSH -j ACCEPT
 #iptables -A INPUT -p tcp -m multiport --sports $IMAP -j ACCEPT
 
 # SAMBA NET_BIOS
-#iptables -A INPUT -p tcp -m multiport --dport $NET_BIOS -j ACCEPT
-#iptables -A INPUT -p udp -m multiport --dport $NET_BIOS -j ACCEPT
+#iptables -A INPUT -p tcp -m multiport --dports $NET_BIOS -j ACCEPT
+#iptables -A INPUT -p udp -m multiport --dports $NET_BIOS -j ACCEPT
+
+# ZEROCONF
+iptables -A INPUT -p udp -m multiport --sports $ZEROCONF -j ACCEPT
 
 # DHCP
 #iptables -A INPUT -p udp -m multiport --sports $DHCP -j ACCEPT
