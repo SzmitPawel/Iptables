@@ -20,21 +20,25 @@ Make sure it is installed on your system.
    ```bash
    git clone https://github.com/SzmitPawel/Iptables.git
 
-2. Copy the firewall script to the init.d directory:
+2. Change owner 
     ```bash
-    sudo cp firewall.sh /etc/init.d/
+    sudo chown root:root linux-firewall-ubuntu.sh
 
 3. Grant permission for the firewall script:
     ```bash
-    sudo chmod 730 /etc/init.d/firewall.sh
+    sudo chmod 755 /etc/init.d/linux-firewall-ubuntu.sh
 
-4. Create a symbolic link to enable the script to run at system startup:
+4. Copy the firewall script to the init.d directory:
     ```bash
-    sudo update-rc.d firewall.sh defaults
+    sudo cp firewall.sh /etc/init.d/
 
-5. To remove a symbolic link, use the following command:
+5. Create a symbolic link to enable the script to run at system startup:
     ```bash
-    update-rc.d -f firewall.sh remove
+    sudo update-rc.d linux-firewall-ubuntu.sh defaults
+
+6. To remove a symbolic link, use the following command:
+    ```bash
+    update-rc.d -f linux-firewall-ubuntu.sh remove
 
 ## Usage
 
@@ -42,11 +46,11 @@ Make sure it is installed on your system.
 
 1. To stop the firewall, use the following command:
     ```bash
-    sudo /etc/init.d/firewall.sh stop
+    sudo /etc/init.d/linux-firewall-ubuntu.sh stop
 
 2. To start the firewall, use the following command:
     ```bash
-    sudo /etc/init.d/firewall.sh start
+    sudo /etc/init.d/linux-firewall-ubuntu.sh start
 
 3. After performing these steps, close the terminal and restart your computer.
     The firewall rules should be automatically applied.
