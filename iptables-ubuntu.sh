@@ -375,8 +375,8 @@ iptables -A INPUT -p tcp -m multiport --dports $SSH -j ACCEPT
 #iptables -A INPUT -p tcp -m multiport --sports $IMAP -j ACCEPT
 
 # SAMBA NET_BIOS
-#iptables -A INPUT -p tcp -m multiport --dports $NET_BIOS -j ACCEPT
-#iptables -A INPUT -p udp -m multiport --dports $NET_BIOS -j ACCEPT
+#iptables -A INPUT -p tcp -m multiport --dports $NET_BIOS_TCP -j ACCEPT
+#iptables -A INPUT -p udp -m multiport --dports $NET_BIOS_UDP -j ACCEPT
 
 # ZEROCONF
 iptables -A INPUT -p udp -m multiport --sports $ZEROCONF -j ACCEPT
