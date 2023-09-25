@@ -3,7 +3,7 @@
 # Name: Linux Firewall Iptables For Raspberry Pi
 # Author: Szmit Paweł
 # Date Created: September 24, 2023
-# Last Updated: September 24, 2023
+# Last Updated: September 25, 2023
 
 ####################################################################################################
 # Script Purpose:
@@ -55,6 +55,7 @@
 #SSH=22
 #FTP=20,21
 #DNS=53
+#MDNS=5353
 #SMTP=25,465,587
 #POP3=110,995
 #IMAP=143,993
@@ -64,8 +65,11 @@
 #MYSQL=3306
 #NET_BIOS_UDP=137,138,139,445
 #NET_BIOS_TCP=139,445
-#ZEROCONF=5353
 #DHCP=67,68
+#CUPS=631
+#SNMP=161
+#PROXY=3128
+#POSTGRE_SQL=5432
 
 ####################################################################################################
 # Set Policies: Default to DROP for incoming traffic.
@@ -180,7 +184,7 @@
 # There is likely to be.
 # DROP REJECT as the response of the mail server etc. falls
 ####################################################################################################
--A INPUT -p tcp --dport 113 -j REJECT --reject-with tcp-reset
+-A INPUT -p tcp -m tcp --dport 113 -j REJECT --reject-with tcp-reset
 
 ####################################################################################################
 # Attack measures: SSH Brute Force
@@ -189,9 +193,9 @@
 # In order to prevent the SSH client side from repeating reconnection, make REJECT instead of DROP.
 # If the SSH server is password-on authentication, uncomment out the following
 ####################################################################################################
-# -A INPUT -p tcp --syn --dports 22 -m recent --name ssh_attack --set
-# -A INPUT -p tcp --syn --dports 22 -m recent --name ssh_attack --rcheck --seconds 60 --hitcount 5 -j LOG --log-prefix "ssh_brute_force: "
-# -A INPUT -p tcp --syn --dports 22 -m recent --name ssh_attack --rcheck --seconds 60 --hitcount 5 -j REJECT --reject-with tcp-reset
+# -A INPUT -p tcp --syn --dport 22 -m recent --name ssh_attack --set
+# -A INPUT -p tcp --syn --dport 22 -m recent --name ssh_attack --rcheck --seconds 60 --hitcount 5 -j LOG --log-prefix "ssh_brute_force: "
+# -A INPUT -p tcp --syn --dport 22 -m recent --name ssh_attack --rcheck --seconds 60 --hitcount 5 -j REJECT --reject-with tcp-reset
 
 ####################################################################################################
 # Attack measures: FTP Brute Force
@@ -215,43 +219,61 @@
 -A INPUT -d 224.0.0.1       -j DROP
 
 ####################################################################################################
-# Allow input from all hosts (ANY -> SELF)
+# Allow input from all hosts
+# Replace ACCEPT with DROP to block port
 ####################################################################################################
 
-# ICMP: Setting to respond to pings
--A INPUT -p icmp -j ACCEPT
+# ICMP: Setting to respond to pings, for lan users only
+-A INPUT -s 192.168.1.0/24 -p icmp -j ACCEPT
 
-# HTTP, HTTPS
+# HTTP, HTTPS (Apache) for all
 # -A INPUT -p tcp -m multiport --dports 80,443 -j ACCEPT
 
-# SSH: To restrict the host, write a trusted host to TRUST_HOSTS and comment out the following
+# SSH: for all
 -A INPUT -p tcp --dport 22 -j ACCEPT
 
-# FTP
-# -A INPUT -p tcp -m multiport --dports 20,21 -j ACCEPT
-
-# DNS
+# DNS: for all
 # -A INPUT -p tcp --sport 53 -j ACCEPT
 # -A INPUT -p udp --sport 53 -j ACCEPT
 
-# SMTP
-# -A INPUT -p tcp -m multiport --sports 25,465,587 -j ACCEPT
+# MDNS: for lan users only
+-A INPUT -s 192.168.1.0/24 -p udp --sport 5353 -j ACCEPT
 
-# POP3
-# -A INPUT -p tcp -m multiport --sports 110,995 -j ACCEPT
+# DHCP (dynamic host) for lan users only 
+# -A INPUT -s 192.168.1.0/24 -p udp -m multiport --sports 67,68 -j ACCEPT
 
-# IMAP
-# -A INPUT -p tcp -m multiport --sports 143,993 -j ACCEPT
+# NTP (time sync) for lan users only
+# -A INPUT -s 192.168.1.0/24 -p udp --dport 123 -j ACCEPT
 
-# SAMBA NET_BIOS
-# -A INPUT -p tcp -m multiport --dports 139,445 -j ACCEPT
-# -A INPUT -p udp -m multiport --dports 137,138,139,445 -j ACCEPT
+# PROXY (proxy server) for lan users only
+# -A INPUT -s 192.168.1.0/24 -p tcp --dport 3128 -j ACCEPT
 
-# ZEROCONF
--A INPUT -p udp --sport 5353 -j ACCEPT
+# SMTP: for all
+# -A INPUT -p tcp -m conntrack -m multiport --sports 25,465,587 -j ACCEPT
 
-# DHCP
-# -A INPUT -p udp -m multiport --sports 67,68 -j ACCEPT
+# POP3 for all
+# -A INPUT -p tcp -m conntrack -m multiport --sports 110,995 -j ACCEPT
+
+# IMAP (Internet Message Access Protocol) for all
+# -A INPUT -p tcp -m conntrack -m multiport --sports 143,993 -j ACCEPT
+
+# FTP (file transfer server) for all
+# -A INPUT -p tcp -m conntrack -m multiport --dports 20,21 -j ACCEPT
+
+# SAMBA (file server) for lan users only
+# -A INPUT -s 192.168.1.0/24 -p tcp -m multiport --dports 139,445 -j ACCEPT
+# -A INPUT -s 192.168.1.0/24 -p udp -m multiport --dports 137,138,139,445 -j ACCEPT
+
+# CUPS (printing service) for lan users only
+# -A INPUT -s 192.168.1.0/24 -p udp --dport 631 -j ACCEPT
+# -A INPUT -s 192.168.1.0/24 -p tcp --dport 631 -j ACCEPT
+# -A INPUT -s 192.168.1.0/24 -p udp --dport 161 -j ACCEPT
+
+# MYSQL (mysql server) for all
+# -A INPUT -p tcp --dport 3306 -j ACCEPT
+
+# POSTGRE SQL (PostgreSQL) for all
+# -A INPUT -p tcp --dport 5432 -j ACCEPT
 
 ####################################################################################################
 # Other than that
