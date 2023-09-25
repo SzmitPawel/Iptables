@@ -251,7 +251,7 @@
 # SMTP: for all
 # -A INPUT -p tcp -m conntrack -m multiport --sports 25,465,587 -j ACCEPT
 
-# POP3 for all
+# POP3: for all
 # -A INPUT -p tcp -m conntrack -m multiport --sports 110,995 -j ACCEPT
 
 # IMAP (Internet Message Access Protocol) for all
