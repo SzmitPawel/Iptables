@@ -96,6 +96,7 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin
 SSH=22
 FTP=20,21
 DNS=53
+MDNS=5353
 SMTP=25,465,587
 POP3=110,995
 IMAP=143,993
@@ -105,8 +106,11 @@ NTP=123
 MYSQL=3306
 NET_BIOS_UDP=137,138,139,445
 NET_BIOS_TCP=139,445
-ZEROCONF=5353
 DHCP=67,68
+CUPS=631
+SNMP=161
+PROXY=3128
+POSTGRE_SQL=5432
 
 ####################################################################################################
 # Functions:
@@ -349,40 +353,57 @@ iptables -A INPUT -d 224.0.0.1       -j DROP
 # Allow input from all hosts (ANY -> SELF)
 ####################################################################################################
 
-# ICMP: Setting to respond to pings
-#iptables -A INPUT -p icmp -j ACCEPT
+# ICMP: Setting to respond to pings, for lan users only
+iptables -A INPUT -s 192.168.1.0/24 -p icmp -j ACCEPT
 
-# HTTP, HTTPS
-#iptables -A INPUT -p tcp -m multiport --dports $HTTP -j ACCEPT
+# HTTP, HTTPS (Apache) for all 
+# iptables -A INPUT -p tcp -m multiport --dports $HTTP -j ACCEPT
 
-# SSH: To restrict the host, write a trusted host to TRUST_HOSTS and comment out the following
+# SSH: for all
 iptables -A INPUT -p tcp -m multiport --dports $SSH -j ACCEPT
 
-# FTP
+# DNS: for all
+# iptables -A INPUT -p tcp -m multiport --sports $DNS -j ACCEPT
+# iptables -A INPUT -p udp -m multiport --sports $DNS -j ACCEPT
+
+# MDNS: for lan users only
+iptables -A INPUT -s 192.168.1.0/24 -p tcp -m multiport --sports $MDNS -j ACCEPT
+
+# DHCP (dynamic host) for lan users only
+# iptables -A INPUT -s 192.168.1.0/24 -p udp -m multiport --sports $DHCP -j ACCEPT
+
+# NTP (time sync) for lan users only
+# iptables -A INPUT -s 192.168.1.0/24 -p udp -m multiport --dports $NTP -j ACCEPT
+
+# PROXY (proxy server) for lan users only
+# iptables -A INPUT -s 192.168.1.0/24 -p tcp -m multiport --dports $PROXY -j ACCEPT
+
+# SMTP: for all
+# iptables -A INPUT -p tcp -m multiport --sports $SMTP -j ACCEPT
+
+# POP3: for all
+# iptables -A INPUT -p tcp -m multiport --sports $POP3 -j ACCEPT
+
+# IMAP (Internet Message Access Protocol) for all
+# iptables -A INPUT -p tcp -m multiport --sports $IMAP -j ACCEPT
+
+# FTP (file transfer server) for all
 # iptables -A INPUT -p tcp -m multiport --dports $FTP -j ACCEPT
 
-# DNS
-#iptables -A INPUT -p tcp -m multiport --sports $DNS -j ACCEPT
-#iptables -A INPUT -p udp -m multiport --sports $DNS -j ACCEPT
+# SAMBA (file server) for lan users only
+# iptables -A INPUT -s 192.168.1.0/24 -p tcp -m multiport --dports $NET_BIOS_TCP -j ACCEPT
+# iptables -A INPUT -s 192.168.1.0/24 -p udp -m multiport --dports $NET_BIOS_UDP -j ACCEPT
 
-# SMTP
-#iptables -A INPUT -p tcp -m multiport --sports $SMTP -j ACCEPT
+# CUPS (printing service) for lan users only
+# iptables -A INPUT -s 192.168.1.0/24 -p udp -m multiport --dport $CUPS -j ACCEPT
+# iptables -A INPUT -s 192.168.1.0/24 -p tcp -m multiport --dport $CUPS -j ACCEPT
+# iptables -A INPUT -s 192.168.1.0/24 -p udp -m multiport --dport $SNMP -j ACCEPT
 
-# POP3
-#iptables -A INPUT -p tcp -m multiport --sports $POP3 -j ACCEPT
+# MYSQL (mysql server) for all
+# iptables -A INPUT -p tcp -m multiport --dport $MYSQL -j ACCEPT
 
-# IMAP
-#iptables -A INPUT -p tcp -m multiport --sports $IMAP -j ACCEPT
-
-# SAMBA NET_BIOS
-#iptables -A INPUT -p tcp -m multiport --dports $NET_BIOS_TCP -j ACCEPT
-#iptables -A INPUT -p udp -m multiport --dports $NET_BIOS_UDP -j ACCEPT
-
-# ZEROCONF
-iptables -A INPUT -p udp -m multiport --sports $ZEROCONF -j ACCEPT
-
-# DHCP
-#iptables -A INPUT -p udp -m multiport --sports $DHCP -j ACCEPT
+# POSTGRE SQL (PostgreSQL) for all
+# iptables -A INPUT -p tcp -m multiport --dport $POSTGRE_SQL -j ACCEPT
 
 ####################################################################################################
 # Allow input from local network (limited)
