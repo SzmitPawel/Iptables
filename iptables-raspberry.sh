@@ -249,16 +249,16 @@
 # -A INPUT -s 192.168.1.0/24 -p tcp --dport 3128 -j ACCEPT
 
 # SMTP: for all
-# -A INPUT -p tcp -m conntrack -m multiport --sports 25,465,587 -j ACCEPT
+# -A INPUT -p tcp -m multiport --sports 25,465,587 -j ACCEPT
 
 # POP3: for all
-# -A INPUT -p tcp -m conntrack -m multiport --sports 110,995 -j ACCEPT
+# -A INPUT -p tcp -m multiport --sports 110,995 -j ACCEPT
 
 # IMAP (Internet Message Access Protocol) for all
-# -A INPUT -p tcp -m conntrack -m multiport --sports 143,993 -j ACCEPT
+# -A INPUT -p tcp -m multiport --sports 143,993 -j ACCEPT
 
 # FTP (file transfer server) for all
-# -A INPUT -p tcp -m conntrack -m multiport --dports 20,21 -j ACCEPT
+# -A INPUT -p tcp -m multiport --dports 20,21 -j ACCEPT
 
 # SAMBA (file server) for lan users only
 # -A INPUT -s 192.168.1.0/24 -p tcp -m multiport --dports 139,445 -j ACCEPT
