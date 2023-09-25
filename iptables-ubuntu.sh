@@ -367,7 +367,7 @@ iptables -A INPUT -p tcp -m multiport --dports $SSH -j ACCEPT
 # iptables -A INPUT -p udp -m multiport --sports $DNS -j ACCEPT
 
 # MDNS: for lan users only
-iptables -A INPUT -s 192.168.1.0/24 -p tcp -m multiport --sports $MDNS -j ACCEPT
+iptables -A INPUT -s 192.168.1.0/24 -p udp -m multiport --sports $MDNS -j ACCEPT
 
 # DHCP (dynamic host) for lan users only
 # iptables -A INPUT -s 192.168.1.0/24 -p udp -m multiport --sports $DHCP -j ACCEPT
