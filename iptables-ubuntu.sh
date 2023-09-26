@@ -11,9 +11,9 @@
 ### END INIT INFO
 
 # Name: Linux Firewall Iptables For Ubuntu
-# Author: Szmit Paweł
+# Author: c3rb3rus
 # Date Created: September 23, 2023
-# Last Updated: September 25, 2023
+# Last Updated: September 26, 2023
 
 ####################################################################################################
 # Script Purpose:
@@ -93,24 +93,24 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin
 ####################################################################################################
 # Port Definitions:
 ####################################################################################################
-SSH=22
-FTP=20,21
-DNS=53
-MDNS=5353
-SMTP=25,465,587
-POP3=110,995
-IMAP=143,993
-HTTP=80,443
-IDENT=113
-NTP=123
-MYSQL=3306
-NET_BIOS_UDP=137,138,139,445
-NET_BIOS_TCP=139,445
-DHCP=67,68
-CUPS=631
-SNMP=161
-PROXY=3128
-POSTGRE_SQL=5432
+SSH=22 - Secure remote login and command execution.
+FTP=20,21 - File transfer protocol for data and control.
+DNS=53 - Domain name to IP address translation.
+MDNS=5353 - Local network service discovery.
+SMTP=25,465,587 - Email delivery and submission.
+POP3=110,995 - Email retrieval.
+IMAP=143,993 - Email retrieval with advanced features.
+HTTP=80,443 - Web browsing and secure web browsing.
+IDENT=113 - User identification for TCP connections.
+NTP=123 - Network time synchronization.
+MYSQL=3306 - MySQL database communication.
+NET_BIOS_UDP=137,138 - NetBIOS name and datagram service over UDP.
+NET_BIOS_TCP=139,445 - NetBIOS session and SMB hosting over TCP.
+DHCP=67,68 - Dynamic host configuration for IP addresses.
+CUPS=631 - Unix printing system over the network.
+SNMP=161 - Network management and monitoring.
+PROXY=3128 - Proxy server for network requests.
+POSTGRE_SQL=5432 - PostgreSQL database communication.
 
 ####################################################################################################
 # Functions:
@@ -223,16 +223,17 @@ iptables -A INPUT -p tcp --tcp-flags ACK,URG URG     -j STEALTH_SCAN
 
 ####################################################################################################
 # Attack countermeasure: Port scan by fragment packet, DOS attack
-# namap -v -sF Measures such as
+# Measures against fragmentation packets and DOS attacks
 ####################################################################################################
 iptables -A INPUT -f -j LOG --log-prefix 'fragment_packet:'
 iptables -A INPUT -f -j DROP
  
 ####################################################################################################
 # Attack countermeasure: Ping of Death
-####################################################################################################
+# Create a chain named "PING_OF_DEATH"
 # Discard if more than 1 ping per second lasts ten times
-iptables -N PING_OF_DEATH # Make chain with the name "PING_OF_DEATH"
+####################################################################################################
+iptables -N PING_OF_DEATH
 iptables -A PING_OF_DEATH -p icmp --icmp-type echo-request \
          -m hashlimit \
          --hashlimit 1/s \
@@ -251,9 +252,10 @@ iptables -A INPUT -p icmp --icmp-type echo-request -j PING_OF_DEATH
 
 ####################################################################################################
 # Attack measures: SYN Flood Attack
-# In addition to this countermeasure, you should turn on Syn Cookie.
+# In addition to this countermeasure, consider enabling Syn Cookie.
+# Create a chain named "SYN_FLOOD"
 ####################################################################################################
-iptables -N SYN_FLOOD # Make a chain with the name "SYN_FLOOD"
+iptables -N SYN_FLOOD
 iptables -A SYN_FLOOD -p tcp --syn \
          -m hashlimit \
          --hashlimit 200/s \
@@ -267,7 +269,7 @@ iptables -A SYN_FLOOD -p tcp --syn \
 # -m hashlimit                       Use hashlimit instead of limit to limit for each host
 # --hashlimit 200/s                  Max 200 connections in a second
 # --hashlimit-burst 3                Restriction is imposed if connection exceeding the above upper limit is three consecutive times
-# --hashlimit-htable-expire 300000   Validity period of record in management table (unit: ms
+# --hashlimit-htable-expire 300000   Validity period of record in management table (unit: ms)
 # --hashlimit-mode srcip             Manage requests by source address
 # --hashlimit-name t_SYN_FLOOD       Hash table name saved in / proc / net / ipt_hashlimit
 # -j RETURN                          If it is within the limit, it returns to the parent chain
@@ -281,8 +283,9 @@ iptables -A INPUT -p tcp --syn -j SYN_FLOOD
 
 ####################################################################################################
 # Attack measures: HTTP DoS/DDoS Attack
+# Create a chain named "HTTP_DOS"
 ####################################################################################################
-iptables -N HTTP_DOS # Make chain with the name "HTTP_DOS"
+iptables -N HTTP_DOS
 iptables -A HTTP_DOS -p tcp -m multiport --dports $HTTP \
          -m hashlimit \
          --hashlimit 1/s \
@@ -310,19 +313,16 @@ iptables -A INPUT -p tcp -m multiport --dports $HTTP -j HTTP_DOS
 
 ####################################################################################################
 # Attack measures: IDENT port probe
-# Use ident to allow an attacker to prepare for future attacks,
-# Perform a port survey to see if the system is vulnerable
-# There is likely to be.
-# DROP REJECT as the response of the mail server etc. falls
+# Allow ident requests but respond with TCP resets to prevent misuse.
 ####################################################################################################
 iptables -A INPUT -p tcp -m multiport --dports $IDENT -j REJECT --reject-with tcp-reset
 
 ####################################################################################################
 # Attack measures: SSH Brute Force
-# In the case of a server using password authentication, SSH prepares for a password full attack.
-# Try to make a connection try only five times per minute.。
-# In order to prevent the SSH client side from repeating reconnection, make REJECT instead of DROP.
-# If the SSH server is password-on authentication, uncomment out the following
+# In case of server using password authentication, prepare for password brute force attack.
+# Allow only five connection attempts per minute.
+# To prevent SSH client from repeatedly reconnecting, use REJECT instead of DROP.
+# Uncomment the following rules if SSH server uses password authentication.
 ####################################################################################################
 # iptables -A INPUT -p tcp --syn -m multiport --dports $SSH -m recent --name ssh_attack --set
 # iptables -A INPUT -p tcp --syn -m multiport --dports $SSH -m recent --name ssh_attack --rcheck --seconds 60 --hitcount 5 -j LOG --log-prefix "ssh_brute_force: "
@@ -330,10 +330,10 @@ iptables -A INPUT -p tcp -m multiport --dports $IDENT -j REJECT --reject-with tc
 
 ####################################################################################################
 # Attack measures: FTP Brute Force
-# FTP prepares for password full attacks for password authentication.
-# Try to make a connection try only five times per minute.
-# In order to prevent the FTP client side from repeating reconnection, make REJECT instead of DROP
-# When starting FTP server, un-comment out the following
+# Prepare for password brute force attacks on FTP with password authentication.
+# Allow only five connection attempts per minute.
+# To prevent FTP client from repeatedly reconnecting, use REJECT instead of DROP.
+# Uncomment the following rules when starting an FTP server.
 ####################################################################################################
 # iptables -A INPUT -p tcp --syn -m multiport --dports $FTP -m recent --name ftp_attack --set
 # iptables -A INPUT -p tcp --syn -m multiport --dports $FTP -m recent --name ftp_attack --rcheck --seconds 60 --hitcount 5 -j LOG --log-prefix "ftp_brute_force: "
@@ -350,10 +350,12 @@ iptables -A INPUT -d 224.0.0.1       -j LOG --log-prefix "drop_broadcast: "
 iptables -A INPUT -d 224.0.0.1       -j DROP
 
 ####################################################################################################
-# Allow input from all hosts (ANY -> SELF)
+# Allow input from all hosts
+# Replace ACCEPT with DROP to block port
 ####################################################################################################
+# Rules definitions (uncomment to use):
 
-# ICMP: Setting to respond to pings, for lan users only
+# ICMP: Setting to respond to pings, for LAN users only
 iptables -A INPUT -s 192.168.1.0/24 -p icmp -j ACCEPT
 
 # HTTP, HTTPS (Apache) for all 
@@ -366,16 +368,16 @@ iptables -A INPUT -p tcp -m multiport --dports $SSH -j ACCEPT
 # iptables -A INPUT -p tcp -m multiport --sports $DNS -j ACCEPT
 # iptables -A INPUT -p udp -m multiport --sports $DNS -j ACCEPT
 
-# MDNS: for lan users only
+# MDNS: for LAN users only
 iptables -A INPUT -s 192.168.1.0/24 -p udp -m multiport --sports $MDNS -j ACCEPT
 
-# DHCP (dynamic host) for lan users only
+# DHCP (dynamic host) for LAN users only
 # iptables -A INPUT -s 192.168.1.0/24 -p udp -m multiport --sports $DHCP -j ACCEPT
 
 # NTP (time sync) for lan users only
 # iptables -A INPUT -s 192.168.1.0/24 -p udp -m multiport --dports $NTP -j ACCEPT
 
-# PROXY (proxy server) for lan users only
+# PROXY (proxy server) for LAN users only
 # iptables -A INPUT -s 192.168.1.0/24 -p tcp -m multiport --dports $PROXY -j ACCEPT
 
 # SMTP: for all
@@ -390,11 +392,11 @@ iptables -A INPUT -s 192.168.1.0/24 -p udp -m multiport --sports $MDNS -j ACCEPT
 # FTP (file transfer server) for all
 # iptables -A INPUT -p tcp -m multiport --dports $FTP -j ACCEPT
 
-# SAMBA (file server) for lan users only
+# SAMBA (file server) for LAN users only
 # iptables -A INPUT -s 192.168.1.0/24 -p tcp -m multiport --dports $NET_BIOS_TCP -j ACCEPT
 # iptables -A INPUT -s 192.168.1.0/24 -p udp -m multiport --dports $NET_BIOS_UDP -j ACCEPT
 
-# CUPS (printing service) for lan users only
+# CUPS (printing service) for LAN users only
 # iptables -A INPUT -s 192.168.1.0/24 -p udp -m multiport --dport $CUPS -j ACCEPT
 # iptables -A INPUT -s 192.168.1.0/24 -p tcp -m multiport --dport $CUPS -j ACCEPT
 # iptables -A INPUT -s 192.168.1.0/24 -p udp -m multiport --dport $SNMP -j ACCEPT
@@ -422,8 +424,7 @@ then
 fi
 
 ####################################################################################################
-# Other than that
-# Those which also did not apply to the above rule logging and discarding
+# Log and drop other packets
 ####################################################################################################
 iptables -A INPUT  -j LOG --log-prefix "drop: "
 iptables -A INPUT  -j DROP
