@@ -1,9 +1,9 @@
 *filter
 
 # Name: Linux Firewall Iptables For Raspberry Pi
-# Author: Szmit Paweł
+# Author: C3rb3rus
 # Date Created: September 24, 2023
-# Last Updated: September 25, 2023
+# Last Updated: September 26, 2023
 
 ####################################################################################################
 # Script Purpose:
@@ -52,24 +52,24 @@
 ####################################################################################################
 # Port Definitions:
 ####################################################################################################
-#SSH=22
-#FTP=20,21
-#DNS=53
-#MDNS=5353
-#SMTP=25,465,587
-#POP3=110,995
-#IMAP=143,993
-#HTTP=80,443
-#IDENT=113
-#NTP=123
-#MYSQL=3306
-#NET_BIOS_UDP=137,138,139,445
-#NET_BIOS_TCP=139,445
-#DHCP=67,68
-#CUPS=631
-#SNMP=161
-#PROXY=3128
-#POSTGRE_SQL=5432
+# SSH=22 - Secure remote login and command execution.
+# FTP=20,21 - File transfer protocol for data and control.
+# DNS=53 - Domain name to IP address translation.
+# MDNS=5353 - Local network service discovery.
+# SMTP=25,465,587 - Email delivery and submission.
+# POP3=110,995 - Email retrieval.
+# IMAP=143,993 - Email retrieval with advanced features.
+# HTTP=80,443 - Web browsing and secure web browsing.
+# IDENT=113 - User identification for TCP connections.
+# NTP=123 - Network time synchronization.
+# MYSQL=3306 - MySQL database communication.
+# NET_BIOS_UDP=137,138 - NetBIOS name and datagram service over UDP.
+# NET_BIOS_TCP=139,445 - NetBIOS session and SMB hosting over TCP.
+# DHCP=67,68 - Dynamic host configuration for IP addresses.
+# CUPS=631 - Unix printing system over the network.
+# SNMP=161 - Network management and monitoring.
+# PROXY=3128 - Proxy server for network requests.
+# POSTGRE_SQL=5432 - PostgreSQL database communication.
 
 ####################################################################################################
 # Set Policies: Default to DROP for incoming traffic.
@@ -89,7 +89,7 @@
 
 ####################################################################################################
 # Attack countermeasure: Stealth Scan
-# Make a chain with the name "STEALTH_SCAN"
+# Create a chain named "STEALTH_SCAN"
 ####################################################################################################
 -N STEALTH_SCAN
 -A STEALTH_SCAN -j LOG --log-prefix "stealth_scan_attack: "
@@ -110,14 +110,14 @@
 
 ####################################################################################################
 # Attack countermeasure: Port scan by fragment packet, DOS attack
-# namap -v -sF Measures such as
+# Measures against fragmentation packets and DOS attacks
 ####################################################################################################
 -A INPUT -f -j LOG --log-prefix "fragment_packet: "
 -A INPUT -f -j DROP
 
 ####################################################################################################
 # Attack countermeasure: Ping of Death
-# Make chain with the name "PING_OF_DEATH"
+# Create a chain named "PING_OF_DEATH"
 # Discard if more than 1 ping per second lasts ten times
 ####################################################################################################
 -N PING_OF_DEATH
@@ -127,13 +127,13 @@
 -A PING_OF_DEATH -j LOG --log-prefix "ping_of_death_attack: "
 -A PING_OF_DEATH -j DROP
 
-# ICMP jumps to "PING_OF_DEATH" chain
+# ICMP packets jump to "PING_OF_DEATH" chain
 -A INPUT -p icmp --icmp-type echo-request -j PING_OF_DEATH
 
 ####################################################################################################
 # Attack measures: SYN Flood Attack
-# In addition to this countermeasure, you should turn on Syn Cookie.
-# Make a chain with the name "SYN_FLOOD"
+# In addition to this countermeasure, consider enabling Syn Cookie.
+# Create a chain named "SYN_FLOOD"
 ####################################################################################################
 -N SYN_FLOOD
 -A SYN_FLOOD -p tcp --syn -m hashlimit --hashlimit 200/s --hashlimit-burst 3 --hashlimit-htable-expire 300000 --hashlimit-mode srcip --hashlimit-name t_SYN_FLOOD -j RETURN
@@ -156,7 +156,7 @@
 
 ####################################################################################################
 # Attack measures: HTTP DoS/DDoS Attack
-# Make chain with the name "HTTP_DOS"
+# Create a chain named "HTTP_DOS"
 ####################################################################################################
 -N HTTP_DOS
 -A HTTP_DOS -p tcp -m multiport --dports 80,443 -m hashlimit --hashlimit 1/s --hashlimit-burst 100 --hashlimit-htable-expire 300000 --hashlimit-mode srcip --hashlimit-name t_HTTP_DOS -j RETURN
@@ -165,7 +165,7 @@
 # -m hashlimit                       Use hashlimit instead of limit to limit for each host
 # --hashlimit 1/s                    Maximum one connection per second
 # --hashlimit-burst 100              It will be restricted if the above upper limit is exceeded 100 times in a row.
-# --hashlimit-htable-expire 300000   Validity period of record in management table (unit: ms
+# --hashlimit-htable-expire 300000   Validity period of record in management table (unit: ms)
 # --hashlimit-mode srcip             Manage requests by source address
 # --hashlimit-name t_HTTP_DOS        Hash table name saved in / proc / net / ipt_hashlimit
 # -j RETURN                          If it is within the limit, it returns to the parent chain
@@ -179,19 +179,16 @@
 
 ####################################################################################################
 # Attack measures: IDENT port probe
-# Use ident to allow an attacker to prepare for future attacks,
-# Perform a port survey to see if the system is vulnerable
-# There is likely to be.
-# DROP REJECT as the response of the mail server etc. falls
+# Allow ident requests but respond with TCP resets to prevent misuse.
 ####################################################################################################
 -A INPUT -p tcp -m tcp --dport 113 -j REJECT --reject-with tcp-reset
 
 ####################################################################################################
 # Attack measures: SSH Brute Force
-# In the case of a server using password authentication, SSH prepares for a password full attack.
-# Try to make a connection try only five times per minute.
-# In order to prevent the SSH client side from repeating reconnection, make REJECT instead of DROP.
-# If the SSH server is password-on authentication, uncomment out the following
+# In case of server using password authentication, prepare for password brute force attack.
+# Allow only five connection attempts per minute.
+# To prevent SSH client from repeatedly reconnecting, use REJECT instead of DROP.
+# Uncomment the following rules if SSH server uses password authentication.
 ####################################################################################################
 # -A INPUT -p tcp --syn --dport 22 -m recent --name ssh_attack --set
 # -A INPUT -p tcp --syn --dport 22 -m recent --name ssh_attack --rcheck --seconds 60 --hitcount 5 -j LOG --log-prefix "ssh_brute_force: "
@@ -199,10 +196,10 @@
 
 ####################################################################################################
 # Attack measures: FTP Brute Force
-# FTP prepares for password full attacks for password authentication.
-# Try to make a connection try only five times per minute.
-# In order to prevent the FTP client side from repeating reconnection, make REJECT instead of DROP
-# When starting FTP server, un-comment out the following
+# Prepare for password brute force attacks on FTP with password authentication.
+# Allow only five connection attempts per minute.
+# To prevent FTP client from repeatedly reconnecting, use REJECT instead of DROP.
+# Uncomment the following rules when starting an FTP server.
 ####################################################################################################
 # -A INPUT -p tcp --syn -m multiport --dports 20,21 -m recent --name ftp_attack --set
 # -A INPUT -p tcp --syn -m multiport --dports 20,21 -m recent --name ftp_attack --rcheck --seconds 60 --hitcount 5 -j LOG --log-prefix "ftp_brute_force: "
@@ -222,8 +219,9 @@
 # Allow input from all hosts
 # Replace ACCEPT with DROP to block port
 ####################################################################################################
+# Rules definitions (uncomment to use):
 
-# ICMP: Setting to respond to pings, for lan users only
+# ICMP: Setting to respond to pings, for LAN users only
 -A INPUT -s 192.168.1.0/24 -p icmp -j ACCEPT
 
 # HTTP, HTTPS (Apache) for all
@@ -236,16 +234,16 @@
 # -A INPUT -p tcp --sport 53 -j ACCEPT
 # -A INPUT -p udp --sport 53 -j ACCEPT
 
-# MDNS: for lan users only
+# MDNS: for LAN users only
 -A INPUT -s 192.168.1.0/24 -p udp --sport 5353 -j ACCEPT
 
-# DHCP (dynamic host) for lan users only 
+# DHCP (dynamic host) for LAN users only 
 # -A INPUT -s 192.168.1.0/24 -p udp -m multiport --sports 67,68 -j ACCEPT
 
-# NTP (time sync) for lan users only
+# NTP (time sync) for LAN users only
 # -A INPUT -s 192.168.1.0/24 -p udp --dport 123 -j ACCEPT
 
-# PROXY (proxy server) for lan users only
+# PROXY (proxy server) for LAN users only
 # -A INPUT -s 192.168.1.0/24 -p tcp --dport 3128 -j ACCEPT
 
 # SMTP: for all
@@ -260,11 +258,11 @@
 # FTP (file transfer server) for all
 # -A INPUT -p tcp -m multiport --dports 20,21 -j ACCEPT
 
-# SAMBA (file server) for lan users only
+# SAMBA (file server) for LAN users only
 # -A INPUT -s 192.168.1.0/24 -p tcp -m multiport --dports 139,445 -j ACCEPT
 # -A INPUT -s 192.168.1.0/24 -p udp -m multiport --dports 137,138,139,445 -j ACCEPT
 
-# CUPS (printing service) for lan users only
+# CUPS (printing service) for LAN users only
 # -A INPUT -s 192.168.1.0/24 -p udp --dport 631 -j ACCEPT
 # -A INPUT -s 192.168.1.0/24 -p tcp --dport 631 -j ACCEPT
 # -A INPUT -s 192.168.1.0/24 -p udp --dport 161 -j ACCEPT
@@ -276,8 +274,7 @@
 # -A INPUT -p tcp --dport 5432 -j ACCEPT
 
 ####################################################################################################
-# Other than that
-# Those which also did not apply to the above rule logging and discarding
+# Log and drop other packets
 ####################################################################################################
 -A INPUT  -j LOG --log-prefix "drop: "
 -A INPUT  -j DROP
