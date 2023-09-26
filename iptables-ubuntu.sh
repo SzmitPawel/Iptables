@@ -13,7 +13,7 @@
 # Name: Linux Firewall Iptables For Ubuntu
 # Author: Szmit Paweł
 # Date Created: September 23, 2023
-# Last Updated: September 23, 2023
+# Last Updated: September 25, 2023
 
 ####################################################################################################
 # Script Purpose:

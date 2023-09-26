@@ -95,7 +95,7 @@ Now, iptables will log its messages to the specified log file.
 
 3. Change owner, use the following command: 
     ```bash
-    sudo chown pi:pi iptables-raspbbery.sh
+    sudo chown <your_user>:<your_group> iptables-raspbbery.sh
 
 4. Grant permission for the firewall script, use the following command:
     ```bash
