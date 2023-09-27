@@ -93,24 +93,24 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin
 ####################################################################################################
 # Port Definitions:
 ####################################################################################################
-SSH=22 - Secure remote login and command execution.
-FTP=20,21 - File transfer protocol for data and control.
-DNS=53 - Domain name to IP address translation.
-MDNS=5353 - Local network service discovery.
-SMTP=25,465,587 - Email delivery and submission.
-POP3=110,995 - Email retrieval.
-IMAP=143,993 - Email retrieval with advanced features.
-HTTP=80,443 - Web browsing and secure web browsing.
-IDENT=113 - User identification for TCP connections.
-NTP=123 - Network time synchronization.
-MYSQL=3306 - MySQL database communication.
-NET_BIOS_UDP=137,138 - NetBIOS name and datagram service over UDP.
-NET_BIOS_TCP=139,445 - NetBIOS session and SMB hosting over TCP.
-DHCP=67,68 - Dynamic host configuration for IP addresses.
-CUPS=631 - Unix printing system over the network.
-SNMP=161 - Network management and monitoring.
-PROXY=3128 - Proxy server for network requests.
-POSTGRE_SQL=5432 - PostgreSQL database communication.
+SSH=22 # Secure remote login and command execution.
+FTP=20,21 # File transfer protocol for data and control.
+DNS=53 # Domain name to IP address translation.
+MDNS=5353 # Local network service discovery.
+SMTP=25,465,587 # Email delivery and submission.
+POP3=110,995 # Email retrieval.
+IMAP=143,993 # Email retrieval with advanced features.
+HTTP=80,443 # Web browsing and secure web browsing.
+IDENT=113 # User identification for TCP connections.
+NTP=123 # Network time synchronization.
+MYSQL=3306 # MySQL database communication.
+NET_BIOS_UDP=137,138 # NetBIOS name and datagram service over UDP.
+NET_BIOS_TCP=139,445 # NetBIOS session and SMB hosting over TCP.
+DHCP=67,68 # Dynamic host configuration for IP addresses.
+CUPS=631 # Unix printing system over the network.
+SNMP=161 # Network management and monitoring.
+PROXY=3128 # Proxy server for network requests.
+POSTGRE_SQL=5432 # PostgreSQL database communication.
 
 ####################################################################################################
 # Functions:
