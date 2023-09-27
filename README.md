@@ -99,15 +99,15 @@ Now, iptables will log its messages to the specified log file.
 
 4. Grant permission for the firewall script, use the following command:
     ```bash
-    sudo chmod 751 /etc/init.d/iptables-ubuntu.sh
+    sudo chmod 751 /etc/init.d/iptables-raspbbery.sh
 
 5. Copy the firewall script to the init directory, use the following command:
     ```bash
-    sudo cp iptables-raspbbery.sh /etc/iptables-ubuntu.sh
+    sudo cp iptables-raspbbery.sh /etc/iptables-raspbbery.sh
 
 5. Load the rules, use the following command:
     ```bash
-    sudo iptables-restore < /etc/iptables-ubuntu.sh
+    sudo iptables-restore < /etc/iptables-raspbbery.sh
 
 6. Check that they loaded correctly, use the following command:
     ```bash
@@ -115,7 +115,7 @@ Now, iptables will log its messages to the specified log file.
 
 7. All OK ? Save the rules, use the following command:
     ```bash
-    sudo sh -c 'iptables-save > /etc/iptables-ubuntu.sh'
+    sudo sh -c 'iptables-save > /etc/iptables-raspbbery.sh'
 
 8. Force rules to load on reboot, use the following command:
     ```bash
@@ -125,7 +125,7 @@ Now, iptables will log its messages to the specified log file.
     Add these lines:
 
     #!/bin/sh
-    /sbin/iptables-restore < /etc/iptables-ubuntu.sh
+    /sbin/iptables-restore < /etc/iptables-raspbbery.sh
     ```
 
 9. Make that file executable, use the following command:
